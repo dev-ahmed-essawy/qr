@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد الباركود ورمز QR</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبة لإنشاء QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- مكتبة لإنشاء الباركود الخطي -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* تأثيرات حركية خفيفة */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* إخفاء العناصر غير الفعالة */
+        .hidden-element {
+            display: none !important;
+        }
+        /* تخصيص التمرير */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-6 flex items-center gap-4">
+            <div class="bg-white text-indigo-600 p-3 rounded-full shadow">
+                <i class="fa-solid fa-qrcode text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold">المُولد الذكي للباركود و QR</h1>
+                <p class="text-indigo-200 text-sm mt-1">حوّل نصوصك، روابطك، وأرقامك إلى رموز قابلة للمسح بثوانٍ.</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl mx-auto w-full px-4 py-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        <!-- قسم الإدخال (يمين) -->
+        <div class="md:col-span-7 space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            
+            <div class="space-y-3">
+                <label class="block text-sm font-semibold text-slate-700">اختر نوع البيانات التي تريد تحويلها:</label>
+                <div class="flex flex-wrap gap-3">
+                    <button type="button" class="type-btn active bg-indigo-100 text-indigo-700 border-2 border-indigo-600 font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition" data-type="qr-text">
+                        <i class="fa-solid fa-link"></i> نص / رابط إلكتروني
+                    </button>
+                    <button type="button" class="type-btn bg-slate-50 text-slate-600 border-2 border-slate-200 hover:bg-slate-100 font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition" data-type="barcode">
+                        <i class="fa-solid fa-barcode"></i> باركود خطي
+                    </button>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- نموذج النص والروابط -->
+            <div id="form-qr-text" class="input-form space-y-4 fade-in">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">النص أو الرابط (URL):</label>
+                    <textarea id="text-input" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition resize-none" placeholder="اكتب النص هنا، أو الصق الرابط الإلكتروني..."></textarea>
+                </div>
+                <div class="bg-blue-50 text-blue-800 text-sm p-4 rounded-xl flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                    <p><strong>لتحويل صورة أو ملف إلى باركود:</strong> قم برفع الملف أولاً على خدمة مثل (Google Drive أو Imgur)، ثم الصق الرابط الخاص به في المربع أعلاه.</p>
+                </div>
+            </div>
+
+            <!-- نموذج الباركود الخطي -->
+            <div id="form-barcode" class="input-form hidden-element space-y-4 fade-in">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">رقم أو نص الباركود (Code 128):</label>
+                    <input type="text" id="barcode-input" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" placeholder="مثال: 1234567890 أو ITEM-99">
+                    <p class="text-xs text-slate-500 mt-2">يفضل استخدام الأحرف الإنجليزية والأرقام للباركود الخطي.</p>
+                </div>
+            </div>
+
+            <div id="error-message" class="hidden-element text-red-600 bg-red-50 p-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span id="error-text">حدث خطأ ما.</span>
+            </div>
+
+            <button id="generate-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2 text-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> إنشاء الرمز الآن
+            </button>
+        </div>
+
+        <!-- قسم النتيجة (يسار) -->
+        <div class="md:col-span-5">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[400px] h-full sticky top-8">
+                
+                <div id="empty-state" class="text-center text-slate-400 space-y-4">
+                    <i class="fa-solid fa-qrcode text-6xl opacity-50"></i>
+                    <p class="font-medium">سيظهر الرمز الخاص بك هنا</p>
+                </div>
+
+                <div id="output-state" class="hidden-element w-full flex flex-col items-center gap-6 fade-in">
+                    <!-- حاوية الرمز -->
+                    <div id="code-container" class="bg-white p-4 rounded-xl border-2 border-dashed border-slate-200 flex justify-center items-center w-full overflow-hidden">
+                        <!-- سيتم توليد الـ QR أو الباركود هنا -->
+                    </div>
+
+                    <button id="download-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow transition-all flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-download"></i> تحميل كصورة (PNG)
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-6 text-center text-sm">
+        <p>تم الإنشاء بواسطة الذكاء الاصطناعي - جميع الحقوق محفوظة &copy; 2026</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // عناصر الواجهة
+            const typeBtns = document.querySelectorAll('.type-btn');
+            const inputForms = document.querySelectorAll('.input-form');
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const codeContainer = document.getElementById('code-container');
+            const emptyState = document.getElementById('empty-state');
+            const outputState = document.getElementById('output-state');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+
+            // المتغير الحالي للنوع
+            let currentType = 'qr-text';
+
+            // تبديل الألسنة (Tabs)
+            typeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // إعادة تعيين أزرار التبديل
+                    typeBtns.forEach(b => {
+                        b.classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-600');
+                        b.classList.add('bg-slate-50', 'text-slate-600', 'border-slate-200');
+                    });
+                    
+                    // تفعيل الزر المضغوط
+                    const targetBtn = e.currentTarget;
+                    targetBtn.classList.remove('bg-slate-50', 'text-slate-600', 'border-slate-200');
+                    targetBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-600');
+
+                    // إخفاء جميع النماذج
+                    inputForms.forEach(form => form.classList.add('hidden-element'));
+                    
+                    // إظهار النموذج المطلوب
+                    currentType = targetBtn.getAttribute('data-type');
+                    document.getElementById(`form-${currentType}`).classList.remove('hidden-element');
+
+                    // إخفاء رسائل الخطأ والنتائج السابقة
+                    hideError();
+                    resetOutput();
+                });
+            });
+
+            // إظهار وإخفاء الخطأ
+            function showError(msg) {
+                errorText.textContent = msg;
+                errorMessage.classList.remove('hidden-element');
+            }
+            function hideError() {
+                errorMessage.classList.add('hidden-element');
+            }
+
+            // إعادة تعيين النتيجة
+            function resetOutput() {
+                emptyState.classList.remove('hidden-element');
+                outputState.classList.add('hidden-element');
+                codeContainer.innerHTML = '';
+            }
+
+            // دالة إنشاء الرمز
+            generateBtn.addEventListener('click', () => {
+                hideError();
+                let dataToEncode = '';
+
+                // تجميع البيانات بناءً على النوع
+                if (currentType === 'qr-text') {
+                    const text = document.getElementById('text-input').value.trim();
+                    if (!text) return showError('الرجاء إدخال نص أو رابط أولاً.');
+                    dataToEncode = text;
+                } 
+                else if (currentType === 'barcode') {
+                    const text = document.getElementById('barcode-input').value.trim();
+                    if (!text) return showError('الرجاء إدخال بيانات الباركود.');
+                    dataToEncode = text;
+                }
+
+                // إعداد منطقة العرض
+                codeContainer.innerHTML = ''; // تنظيف الحاوية
+                emptyState.classList.add('hidden-element');
+                outputState.classList.remove('hidden-element');
+
+                try {
+                    if (currentType === 'qr-text') {
+                        // إنشاء QR Code باستخدام عنصر وهمي أولاً
+                        const tempDiv = document.createElement('div');
+                        new QRCode(tempDiv, {
+                            text: dataToEncode,
+                            width: 256,
+                            height: 256,
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                        
+                        // استخراج الـ Canvas وتحويله لصورة حقيقية لعرضها بثبات
+                        setTimeout(() => {
+                            const canvas = tempDiv.querySelector('canvas');
+                            if(canvas) {
+                                const img = document.createElement('img');
+                                img.src = canvas.toDataURL("image/png");
+                                img.id = "generated-image";
+                                img.className = "max-w-full h-auto rounded shadow-sm border border-slate-200";
+                                codeContainer.appendChild(img);
+                            }
+                        }, 50);
+
+                    } else if (currentType === 'barcode') {
+                        // إنشاء باركود خطي
+                        const canvas = document.createElement('canvas');
+                        JsBarcode(canvas, dataToEncode, {
+                            format: "CODE128",
+                            lineColor: "#000",
+                            width: 2,
+                            height: 100,
+                            displayValue: true
+                        });
+                        
+                        // تحويل الباركود لصورة حقيقية
+                        const img = document.createElement('img');
+                        img.src = canvas.toDataURL("image/png");
+                        img.id = "generated-image";
+                        img.className = "max-w-full h-auto rounded shadow-sm border border-slate-200";
+                        codeContainer.appendChild(img);
+                    }
+                } catch (err) {
+                    showError('حدث خطأ أثناء توليد الرمز. تأكد من صحة البيانات المُدخلة.');
+                    resetOutput();
+                }
+            });
+
+            // دالة التحميل كصورة
+            downloadBtn.addEventListener('click', () => {
+                const img = document.getElementById('generated-image');
+                if (!img) return;
+
+                // إنشاء رابط تحميل وهمي وتفعيله من مصدر الصورة
+                const downloadLink = document.createElement('a');
+                downloadLink.href = img.src;
+                
+                // تحديد اسم الملف بناءً على النوع
+                const prefix = currentType === 'qr-text' ? 'QRCode' : 'Barcode';
+                const randomId = Math.floor(Math.random() * 10000);
+                downloadLink.download = `${prefix}_${randomId}.png`;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            });
+        });
+    </script>
+</body>
+</html>
